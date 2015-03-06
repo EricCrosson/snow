@@ -22,7 +22,7 @@
 
 ;;; Commentary:
 
-;; Modeled after a bash script I found somewhere. I'll try to find the
+;; Modeled after a bash script I found somewhere.  I'll try to find the
 ;; source as this grows.
 
 ;; Usage:
@@ -31,10 +31,10 @@
 ;;   - or -
 ;; (snow)
 
-;;; Code
+;;; Code:
 
 (defcustom snow-flake "❄"
-  "ASCII snowflake. Each one is unique!"
+  "ASCII snowflake.  Each one is unique!"
   :type 'string
   :group 'snow)
 
@@ -54,8 +54,8 @@
   :group 'snow)
 
 (defcustom snow-crosson-index-delta 0.1
-  "Crosson index delta applied to the crosson index of the
-snowstorm, a measurement of simulated-snowstorm intensity."
+  "The delta applied to the current Crosson index of the snowstorm, a
+measurement of simulated-snowstorm intensity."
   :type 'number
   :group 'snow)
 
@@ -65,7 +65,7 @@ snowstorm, a measurement of simulated-snowstorm intensity."
   :group 'snow)
 
 (defcustom snow-seed nil
-  "Seed for the snow RNG. Nil means use a random seed."
+  "Seed for the snow RNG.  Nil means use a random seed."
   :type 'string
   :group 'snow)
 
@@ -114,19 +114,21 @@ snowstorm, a measurement of simulated-snowstorm intensity."
     (setq snow-seed "zebulon")))
 
 (defun snow-chance (percent)
-  "Return true PERCENT% of the time, where PERCENT is a fraction
-less than or equal to 1."
+  "True PERCENT% of the time."
   (> percent (/ (random 100) 100.0)))
 
 (defun snow-flake? (chance)
-  "Function to guard snowlake creation based on SEED."
+  "Function to guard snowlake creation based on SEED.
+Argument CHANCE is the likelihood that a given char will be a snowflake."
   (let ((create-seed? (snow-chance chance)))
     (if create-seed?
 	snow-flake
       snow-noflake)))
 
 (defun snow-spawn (crosson-index seed)
-  "Spawn a horizontal slice of a snowstorm."
+  "Spawn a horizontal slice of a snowstorm.
+Argument CROSSON-INDEX is the current intensity of the storm.
+Argument SEED is a seed for the RNG."
   (let* ((cols  (window-body-width))
 	 (lines (window-body-height))
 	 (snowflakes nil))
@@ -135,7 +137,9 @@ less than or equal to 1."
       (setq snowflakes (concat snowflakes (snow-flake? snow-flake-threshold))))))
 
 (defun snow-fall (snowflakes crosson-index seed)
-  "Compute the mutating state of SNOWFLAKES using SEED as a random number generator."
+  "Compute the mutating state of SNOWFLAKES using SEED as a
+random number generator.
+Argument CROSSON-INDEX is the intensity of the current storm."
   (let ((new-snow (snow-spawn crosson-index seed))
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
@@ -143,13 +147,15 @@ less than or equal to 1."
     (cons new-snow local-snowflakes)))
 
 (defun snow-update-cindex (crosson-index seed)
-  "Mutate CINDEX into a new crosson-index based on rng SEED."
+  "Mutate CROSSON-INDEX into a new crosson-index based on rng SEED."
   (random seed)
   (abs (if (integerp (/ (random) 100))
 	   (+ crosson-index (random snow-crosson-index-delta))
 	 crosson-index)))
 
 (defun snow-display (snowflakes sleeptime)
+  "Display SNOWFLAKES and monitor the user for input. If input is
+pending after SLEEPTIME seconds, exit `snow-mode.'"
   ;; prep point
   (erase-buffer)
   (goto-char 1)
@@ -163,3 +169,7 @@ less than or equal to 1."
   (or (and (sit-for sleeptime) (< 0 sleeptime))
       (not (input-pending-p))
       (throw 'persephones-return nil)))
+
+(provide 'snow)
+
+;;; snow.el ends here
