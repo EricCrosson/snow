@@ -91,34 +91,54 @@ measurement of simulated-snowstorm intensity."
   :type 'boolean
   :group 'snow)
 
-;;;###autoload
-(defun snow ()
-  "Simulate snow."
-  (interactive)
-  (snow-setup)
-  (random snow-seed)
-  (catch 'persephones-return
-    (let* ((seed (random))
-	   (cindex snow-crosson-index)
-	   (snowflakes (list (snow-spawn cindex seed))))
-      (while t
-	(let ((inhibit-quit t)
-	      (inhibit-read-only t))
-	  (snow-display snowflakes snow-time-delta)
-	  (setq cindex (snow-update-cindex cindex seed))
-	  (setq seed (random))
-	  (setq snowflakes (snow-fall snowflakes cindex seed)))))))
+(defcustom snow-timeslice nil
+  "Current time slice of the observed snowstorm."
+  :type 'number
+  :group 'snow)
 
-(define-derived-mode snow-mode special-mode "Snow"
-  "Major mode for the buffer of `snow'."
-  (setq-local case-fold-search nil)
-  (visual-line-mode -1)
-  (setq-local truncate-lines t)
-  (setq-local show-trailing-whitespace nil)
-  (setq-local fill-column (1- (window-width)))
-  (setq-local snow-seed snow-seed)
-  (setq-local mode-line-buffer-identification '("snow: " snow-seed))
-  (buffer-disable-undo))
+(defcustom snow-timeslice-string nil
+  "Current time slice of the observed snowstorm."
+  :type 'string
+  :group 'snow)
+
+;; Macros are used macros for manifest constants instead of variables
+;; because the compiler will convert them to constants, which should
+;; eval faster than symbols.
+
+(defmacro snow-increment (variable) (list 'setq variable (list '1+ variable)))
+
+(defun snow-chance (percent)
+  "True PERCENT% of the time."
+  (> percent (/ (random 100) 100.0)))
+
+(defun snow-flake? (chance)
+  "Function to guard snowlake creation.
+Argument CHANCE is the likelihood that a given char will be a
+snowflake."
+  (if (snow-chance chance)
+      snow-flake
+    snow-noflake))
+
+(defun snow-random-seed ()
+  "A random string used as the current snowstorm's RNG seed."
+  (let* ((seed-length 8)
+	 (alphabet "abcdefghijklmnopqrstuvwxyz")
+	 (digits "0123456789")
+	 (symbols "!@#$^&*()=+-")
+	 (dict (concat alphabet (upcase alphabet) digits symbols))
+	 (seed ""))
+    (dotimes (i seed-length seed)
+      (let ((index (random (length dict))))
+	(setq seed (concat seed (substring-no-properties
+				 dict index (+ 1 index))))))))
+
+(defun snow-increment-timeslice ()
+  "Increment variable `snow-timeslice' and corresponding
+variable `snow-timeslice-string'."
+  (snow-increment snow-timeslice)
+  (setq-local snow-timeslice-string (concat
+				     (int-to-string snow-timeslice)
+				     ":" snow-seed)))
 
 (defun snow-setup ()
   "Setup the snow simulation environment."
@@ -128,20 +148,9 @@ measurement of simulated-snowstorm intensity."
   (snow-mode)
   (when (not snow-initialized)
     ;; todo: update
-    (random t)
-    (setq snow-seed (random))))
-
-(defun snow-chance (percent)
-  "True PERCENT% of the time."
-  (> percent (/ (random 100) 100.0)))
-
-(defun snow-flake? (chance)
-  "Function to guard snowlake creation based on SEED.
-Argument CHANCE is the likelihood that a given char will be a snowflake."
-  (let ((create-seed? (snow-chance chance)))
-    (if create-seed?
-	snow-flake
-      snow-noflake)))
+    (setq snow-seed (snow-random-seed)))
+  (setq-local snow-timeslice 0)
+  (setq-local snow-timeslice-string (concat "0:" snow-seed)))
 
 (defun snow-spawn (crosson-index seed)
   "Spawn a horizontal slice of a snowstorm.
@@ -171,9 +180,8 @@ Argument CROSSON-INDEX is the intensity of the current storm."
 	   (+ crosson-index (random snow-crosson-index-delta))
 	 crosson-index)))
 
-(defun snow-display (snowflakes sleeptime)
-  "Display SNOWFLAKES and monitor the user for input. If input is
-pending after SLEEPTIME seconds, exit `snow-mode.'"
+(defun snow-insert (snowflakes)
+  "Insert SNOWFLAKES into the current buffer at point."
   ;; prep point
   (erase-buffer)
   (goto-char 1)
@@ -183,10 +191,47 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
     (while flakes
       (insert (concat (pop flakes) "\n"))))
   (goto-char 1)
+  (recenter 0))
+
+(defun snow-display (snowflakes sleeptime)
+  "Display SNOWFLAKES and monitor the user for input. If input is
+pending after SLEEPTIME seconds, exit `snow-mode.'"
+  (snow-insert snowflakes)
   ;; time delta
   (or (and (sit-for sleeptime) (< 0 sleeptime))
       (not (input-pending-p))
       (throw 'persephones-return nil)))
+
+(define-derived-mode snow-mode special-mode "Snow"
+  "Major mode for the buffer of `snow'."
+  (setq-local case-fold-search nil)
+  (visual-line-mode -1)
+  (setq-local truncate-lines t)
+  (setq-local show-trailing-whitespace nil)
+  (setq-local fill-column (1- (window-width)))
+  (setq-local snow-seed snow-seed)
+  (setq-local mode-line-buffer-identification '("snow: "
+						snow-timeslice-string))
+  (buffer-disable-undo))
+
+;;;###autoload
+(defun snow ()
+  "Simulate snow."
+  (interactive)
+  (snow-setup)
+  (random snow-seed)
+  (catch 'persephones-return
+    (let* ((rand (random))
+	   (cindex snow-crosson-index)
+	   (snowflakes (list (snow-spawn cindex rand))))
+      (while t
+	(let ((inhibit-quit t)
+	      (inhibit-read-only t))
+	  (snow-display snowflakes snow-time-delta)
+	  (setq rand (random))
+	  (setq cindex (snow-update-cindex cindex rand))
+	  (setq snowflakes (snow-fall snowflakes cindex rand))
+	  (snow-increment-timeslice))))))
 
 (provide 'snow)
 
