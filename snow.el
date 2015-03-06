@@ -25,6 +25,22 @@
 ;; Modeled after a bash script I found somewhere.  I'll try to find the
 ;; source as this grows.
 
+;; TODOs:
+
+;; - [X] snow fall
+;; - [ ] pickable rng
+;; - [ ] fastforward
+;; - [ ] rewind
+;; - [ ] jump to time
+;; - [ ] transpose flurries
+;; - [ ] wind gusts
+;; - [ ] ground clusters
+;; - [ ] worsening conditions on the cloud
+;; - [ ] recognized keys in snow-mode
+;; - [ ] hide snow-mode as an interactive function
+;; - [ ] keep track of time snowed in
+;; - [ ] achievements unlocked
+
 ;; Usage:
 
 ;; M-x snow
