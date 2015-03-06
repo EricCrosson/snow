@@ -29,6 +29,7 @@
 
 ;; - [X] snow fall
 ;; - [ ] pickable rng
+;; - [ ] snow collects on ground
 ;; - [ ] fastforward
 ;; - [ ] rewind
 ;; - [ ] jump to time
@@ -127,7 +128,8 @@ measurement of simulated-snowstorm intensity."
   (snow-mode)
   (when (not snow-initialized)
     ;; todo: update
-    (setq snow-seed "zebulon")))
+    (random t)
+    (setq snow-seed (random))))
 
 (defun snow-chance (percent)
   "True PERCENT% of the time."
