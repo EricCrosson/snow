@@ -48,7 +48,7 @@
   :type 'number
   :group 'snow)
 
-(defcustom snow-flake-threshold 0.16
+(defcustom snow-flake-threshold 0.08
   "Percent chance that a character will become a snowflake."
   :type 'number
   :group 'snow)
@@ -74,6 +74,7 @@ snowstorm, a measurement of simulated-snowstorm intensity."
   :type 'boolean
   :group 'snow)
 
+;;;###autoload
 (defun snow ()
   "Simulate snow."
   (interactive)
@@ -138,7 +139,7 @@ less than or equal to 1."
   (let ((new-snow (snow-spawn crosson-index seed))
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
-	(setq local-snowflakes (cdr local-snowflakes)))
+	(delq (last local-snowflakes) local-snowflakes))
     (cons new-snow local-snowflakes)))
 
 (defun snow-update-cindex (crosson-index seed)
