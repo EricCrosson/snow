@@ -175,7 +175,7 @@ Argument CROSSON-INDEX is the intensity of the current storm."
   (let ((new-snow (snow-spawn crosson-index seed))
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
-	(delq (last local-snowflakes) local-snowflakes))
+	(nbutlast local-snowflakes 1))
     (cons new-snow local-snowflakes)))
 
 (defun snow-update-cindex (crosson-index seed)
@@ -187,16 +187,18 @@ Argument CROSSON-INDEX is the intensity of the current storm."
 
 (defun snow-insert (snowflakes)
   "Insert SNOWFLAKES into the current buffer at point."
-  ;; prep point
-  (erase-buffer)
-  (goto-char 1)
-  (recenter 0)
-  ;; insert snow
-  (let ((flakes snowflakes))
-    (while flakes
-      (insert (concat (pop flakes) "\n"))))
-  (goto-char 1)
-  (recenter 0))
+  (let ((inhibit-quit t)
+	(inhibit-read-only t))
+    ;; prep point
+    (erase-buffer)
+    (goto-char 1)
+    (recenter 0)
+    ;; insert snow
+    (let ((flakes snowflakes))
+      (while flakes
+	(insert (concat (pop flakes) "\n"))))
+    (goto-char 1)
+    (recenter 0)))
 
 (defun snow-display (snowflakes sleeptime)
   "Display SNOWFLAKES and monitor the user for input. If input is
