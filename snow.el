@@ -198,7 +198,7 @@ Argument CROSSON-INDEX is the intensity of the current storm."
 pending after SLEEPTIME seconds, exit `snow-mode.'"
   (snow-insert snowflakes)
   ;; time delta
-  (or (and (sit-for sleeptime) (< 0 sleeptime))
+  (or (and (< 0 sleeptime) (sit-for sleeptime))
       (not (input-pending-p))
       (throw 'persephones-return nil)))
 
