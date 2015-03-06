@@ -28,6 +28,7 @@
 ;; TODOs:
 
 ;; - [X] snow fall
+;; - [X] debug mode
 ;; - [ ] pickable rng
 ;; - [ ] snow collects on ground
 ;; - [ ] fastforward
@@ -70,7 +71,7 @@
   :type 'number
   :group 'snow)
 
-(defcustom snow-crosson-index-delta 0.1
+(defcustom snow-crosson-index-delta 0.005
   "The delta applied to the current Crosson index of the snowstorm, a
 measurement of simulated-snowstorm intensity."
   :type 'number
@@ -79,11 +80,6 @@ measurement of simulated-snowstorm intensity."
 (defcustom snow-crosson-index 0.0
   "Crosson Index of the current snowstorm."
   :type 'number
-  :group 'snow)
-
-(defcustom snow-seed nil
-  "Seed for the snow RNG.  Nil means use a random seed."
-  :type 'string
   :group 'snow)
 
 (defcustom snow-initialized nil
@@ -99,6 +95,11 @@ measurement of simulated-snowstorm intensity."
 (defcustom snow-timeslice-string nil
   "Current time slice of the observed snowstorm."
   :type 'string
+  :group 'snow)
+
+(defcustom snow-debug-status nil
+  "Debug mode status of function `snow'."
+  :type 'boolean
   :group 'snow)
 
 ;; Macros are used macros for manifest constants instead of variables
@@ -137,53 +138,42 @@ snowflake."
 	(setq seed (concat seed (substring-no-properties
 				 dict index (+ 1 index))))))))
 
+;; todo: more stability but sudden surges in cindex
+(defun snow-update-cindex (crosson-index)
+  "Mutate CROSSON-INDEX into a new crosson-index pseudo-randomly."
+    (abs (+ crosson-index (* (- (random 10) 7) snow-crosson-index-delta))))
+
 (defun snow-increment-timeslice ()
   "Increment variable `snow-timeslice' and corresponding
 variable `snow-timeslice-string'."
   (snow-increment snow-timeslice)
   (setq-local snow-timeslice-string (concat
 				     (int-to-string snow-timeslice)
-				     ":" snow-seed)))
+				     ":" snow-seed))
+  (setq-local snow-crosson-index (snow-update-cindex snow-crosson-index)))
 
-(defun snow-setup ()
-  "Setup the snow simulation environment."
-  (switch-to-buffer (get-buffer-create "*Snow*") t)
-  (read-only-mode -1)
-  (erase-buffer)
-  (snow-mode)
-  (when (not snow-initialized)
-    ;; todo: update
-    (setq snow-seed (snow-random-seed)))
-  (setq-local snow-timeslice 0)
-  (setq-local snow-timeslice-string (concat "0:" snow-seed)))
+(defun snow-debug ()
+  "Display debugging information if `snow-debug-status' is
+non-nil."
+  (message (format "%g cindex" snow-crosson-index)))
 
-(defun snow-spawn (crosson-index seed)
+(defun snow-spawn (crosson-index)
   "Spawn a horizontal slice of a snowstorm.
-Argument CROSSON-INDEX is the current intensity of the storm.
-Argument SEED is a seed for the RNG."
+Argument CROSSON-INDEX is the current intensity of the storm."
   (let* ((cols  (window-body-width))
 	 (lines (window-body-height))
 	 (snowflakes nil))
-    (random seed)
     (dotimes (col cols snowflakes)
       (setq snowflakes (concat snowflakes (snow-flake? snow-flake-threshold))))))
 
-(defun snow-fall (snowflakes crosson-index seed)
-  "Compute the mutating state of SNOWFLAKES using SEED as a
-random number generator.
+(defun snow-fall (snowflakes crosson-index)
+  "Compute the mutating state of SNOWFLAKES.
 Argument CROSSON-INDEX is the intensity of the current storm."
-  (let ((new-snow (snow-spawn crosson-index seed))
+  (let ((new-snow (snow-spawn crosson-index))
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
 	(nbutlast local-snowflakes 1))
     (cons new-snow local-snowflakes)))
-
-(defun snow-update-cindex (crosson-index seed)
-  "Mutate CROSSON-INDEX into a new crosson-index based on rng SEED."
-  (random seed)
-  (abs (if (integerp (/ (random) 100))
-	   (+ crosson-index (random snow-crosson-index-delta))
-	 crosson-index)))
 
 (defun snow-insert (snowflakes)
   "Insert SNOWFLAKES into the current buffer at point."
@@ -201,13 +191,24 @@ Argument CROSSON-INDEX is the intensity of the current storm."
     (recenter 0)))
 
 (defun snow-display (snowflakes sleeptime)
-  "Display SNOWFLAKES and monitor the user for input. If input is
+  "Display SNOWFLAKES and monitor for user input. If input is
 pending after SLEEPTIME seconds, exit `snow-mode.'"
   (snow-insert snowflakes)
-  ;; time delta
+  (snow-debug)
   (or (and (< 0 sleeptime) (sit-for sleeptime))
       (not (input-pending-p))
       (throw 'persephones-return nil)))
+
+(defun snow-setup ()
+  "Setup the snow simulation environment."
+  (switch-to-buffer (get-buffer-create "*Snow*") t)
+  (read-only-mode -1)
+  (erase-buffer)
+  (snow-mode)
+  (setq-local snow-seed (snow-random-seed))
+  (setq-local snow-crosson-index snow-crosson-index)
+  (setq-local snow-timeslice 0)
+  (setq-local snow-timeslice-string (concat "0:" snow-seed)))
 
 (define-derived-mode snow-mode special-mode "Snow"
   "Major mode for the buffer of `snow'."
@@ -216,9 +217,7 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
   (setq-local truncate-lines t)
   (setq-local show-trailing-whitespace nil)
   (setq-local fill-column (1- (window-width)))
-  (setq-local snow-seed snow-seed)
-  (setq-local mode-line-buffer-identification
-	      '("snow: " snow-timeslice-string))
+  (setq-local mode-line-buffer-identification '("snow: " snow-timeslice-string))
   (buffer-disable-undo))
 
 ;;;###autoload
@@ -228,16 +227,14 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
   (snow-setup)
   (random snow-seed)
   (catch 'persephones-return
-    (let* ((rand (random))
-	   (cindex snow-crosson-index)
-	   (snowflakes (list (snow-spawn cindex rand))))
+    (let* ((crosson-index snow-crosson-index)
+	   (snowflakes (list (snow-spawn crosson-index))))
       (while t
 	(let ((inhibit-quit t)
 	      (inhibit-read-only t))
 	  (snow-display snowflakes snow-time-delta)
-	  (setq rand (random))
-	  (setq cindex (snow-update-cindex cindex rand))
-	  (setq snowflakes (snow-fall snowflakes cindex rand))
+	  (setq crosson-index (snow-update-cindex crosson-index))
+	  (setq snowflakes (snow-fall snowflakes crosson-index))
 	  (snow-increment-timeslice))))))
 
 (provide 'snow)
