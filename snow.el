@@ -43,8 +43,19 @@
   :type 'string
   :group 'snow)
 
-(defcustom snow-time-delta 0.1
-  "ASCII snowflake. Each one is unique!"
+(defcustom snow-time-delta 0.5
+  "Time delay in seconds between steps of the snowstorm."
+  :type 'number
+  :group 'snow)
+
+(defcustom snow-flake-threshold 0.16
+  "Percent chance that a character will become a snowflake."
+  :type 'number
+  :group 'snow)
+
+(defcustom snow-crosson-index-delta 0.1
+  "Crosson index delta applied to the crosson index of the
+snowstorm, a measurement of simulated-snowstorm intensity."
   :type 'number
   :group 'snow)
 
@@ -53,32 +64,106 @@
   :type 'number
   :group 'snow)
 
-(defcustom snow-seed "zebulon"
+(defcustom snow-seed nil
   "Seed for the snow RNG. Nil means use a random seed."
   :type 'string
   :group 'snow)
 
-(defun snow-flake? (seed)
+(defcustom snow-initialized nil
+  "Set to true when `snow' has been run once."
+  :type 'boolean
+  :group 'snow)
+
+(defun snow ()
+  "Simulate snow."
+  (interactive)
+  (snow-setup)
+  (random snow-seed)
+  (catch 'persephones-return
+    (let* ((seed (random))
+	   (cindex snow-crosson-index)
+	   (snowflakes (list (snow-spawn cindex seed))))
+      (while t
+	(let ((inhibit-quit t)
+	      (inhibit-read-only t))
+	  (snow-display snowflakes snow-time-delta)
+	  (setq cindex (snow-update-cindex cindex seed))
+	  (setq seed (random))
+	  (setq snowflakes (snow-fall snowflakes cindex seed)))))))
+
+(define-derived-mode snow-mode special-mode "Snow"
+  "Major mode for the buffer of `snow'."
+  (setq-local case-fold-search nil)
+  (setq-local truncate-lines t)
+  (setq-local show-trailing-whitespace nil)
+  (setq-local fill-column (1- (window-width)))
+  (setq-local snow-seed snow-seed)
+  (setq-local mode-line-buffer-identification '("snow: " snow-seed))
+  (buffer-disable-undo))
+
+;; todo: build list in this way insteaed of post-processing
+(defun snow-flatten (list)
+  (cond
+   ((null list) nil)
+   ((atom list) (list list))
+   (t (append (snow-flatten (car list)) (snow-flatten (cdr list))))))
+
+(defun snow-setup ()
+  "Setup the snow simulation environment."
+  (switch-to-buffer (get-buffer-create "*Snow*") t)
+  (read-only-mode -1)
+  (erase-buffer)
+  (snow-mode)
+  (when (not snow-initialized)
+    ;; todo: update
+    (setq snow-seed "zebulon")))
+
+(defun snow-chance (percent)
+  "Return true PERCENT% of the time, where PERCENT is a fraction
+less than or equal to 1."
+  (< (/ (random 100) 100.0) percent))
+
+(defun snow-flake? (chance)
   "Function to guard snowlake creation based on SEED."
-  (let ((create-seed? (and (evenp seed)
-			  (< 0 seed))))
+  (let ((create-seed? (snow-chance chance)))
     (if create-seed?
 	snow-flake
       snow-noflake)))
 
 (defun snow-spawn (crosson-index seed)
-  "Spawn a snowstorm."
-  (let* ((cols  (window-total-width))
-	 (lines (window-total-height))
+  "Spawn a horizontal slice of a snowstorm."
+  (let* ((cols  (window-body-width))
+	 (lines (window-body-height))
 	 (snowflakes nil))
     (random seed)
     (dotimes (col cols snowflakes)
-      (setq snowflakes (concat snowflakes (snow-flake? (random))))
-      )))
+      (setq snowflakes (concat snowflakes (snow-flake? snow-flake-threshold))))))
 
-(defun snow ()
-  ""
-  (interactive)
-  (let* ((snowflakes (snow-spawn snow-crosson-index snow-seed)))
-    (message snowflakes)
-      ))
+(defun snow-fall (snowflakes crosson-index seed)
+  "Compute the mutating state of SNOWFLAKES using SEED as a random number generator."
+  (let ((new-snow (snow-spawn crosson-index seed))
+	(local-snowflakes snowflakes))
+    (when (< (window-total-height) (length local-snowflakes))
+	(setq local-snowflakes (cdr local-snowflakes)))
+      (snow-flatten (list new-snow local-snowflakes))))
+
+(defun snow-update-cindex (crosson-index seed)
+  "Mutate CINDEX into a new crosson-index based on rng SEED."
+  (random seed)
+  (abs (if (integerp (/ (random) 100))
+	   (+ crosson-index (random snow-crosson-index-delta))
+	 crosson-index)))
+
+(defun snow-display (snowflakes sleeptime)
+  ;; prep point
+  (erase-buffer)
+  (goto-char 1)
+  (recenter 0)
+  ;; insert snow
+  (let ((flakes snowflakes))
+    (while flakes
+      (insert (concat (pop flakes) "\n"))))
+  ;; time delta
+  (or (and (sit-for sleeptime) (< 0 sleeptime))
+      (not (input-pending-p))
+      (throw 'persephones-return nil)))
