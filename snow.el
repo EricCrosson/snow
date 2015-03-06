@@ -210,8 +210,8 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
   (setq-local show-trailing-whitespace nil)
   (setq-local fill-column (1- (window-width)))
   (setq-local snow-seed snow-seed)
-  (setq-local mode-line-buffer-identification '("snow: "
-						snow-timeslice-string))
+  (setq-local mode-line-buffer-identification
+	      '("snow: " snow-timeslice-string))
   (buffer-disable-undo))
 
 ;;;###autoload
