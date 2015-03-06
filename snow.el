@@ -94,19 +94,13 @@ snowstorm, a measurement of simulated-snowstorm intensity."
 (define-derived-mode snow-mode special-mode "Snow"
   "Major mode for the buffer of `snow'."
   (setq-local case-fold-search nil)
+  (visual-line-mode -1)
   (setq-local truncate-lines t)
   (setq-local show-trailing-whitespace nil)
   (setq-local fill-column (1- (window-width)))
   (setq-local snow-seed snow-seed)
   (setq-local mode-line-buffer-identification '("snow: " snow-seed))
   (buffer-disable-undo))
-
-;; todo: build list in this way insteaed of post-processing
-(defun snow-flatten (list)
-  (cond
-   ((null list) nil)
-   ((atom list) (list list))
-   (t (append (snow-flatten (car list)) (snow-flatten (cdr list))))))
 
 (defun snow-setup ()
   "Setup the snow simulation environment."
@@ -121,7 +115,7 @@ snowstorm, a measurement of simulated-snowstorm intensity."
 (defun snow-chance (percent)
   "Return true PERCENT% of the time, where PERCENT is a fraction
 less than or equal to 1."
-  (< (/ (random 100) 100.0) percent))
+  (> percent (/ (random 100) 100.0)))
 
 (defun snow-flake? (chance)
   "Function to guard snowlake creation based on SEED."
@@ -145,7 +139,7 @@ less than or equal to 1."
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
 	(setq local-snowflakes (cdr local-snowflakes)))
-      (snow-flatten (list new-snow local-snowflakes))))
+    (cons new-snow local-snowflakes)))
 
 (defun snow-update-cindex (crosson-index seed)
   "Mutate CINDEX into a new crosson-index based on rng SEED."
@@ -163,6 +157,7 @@ less than or equal to 1."
   (let ((flakes snowflakes))
     (while flakes
       (insert (concat (pop flakes) "\n"))))
+  (goto-char 1)
   ;; time delta
   (or (and (sit-for sleeptime) (< 0 sleeptime))
       (not (input-pending-p))
