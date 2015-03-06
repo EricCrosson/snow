@@ -65,7 +65,7 @@
   :type 'number
   :group 'snow)
 
-(defcustom snow-flake-threshold 0.08
+(defcustom snow-flake-threshold 0.002
   "Percent chance that a character will become a snowflake."
   :type 'number
   :group 'snow)
@@ -108,8 +108,13 @@ measurement of simulated-snowstorm intensity."
 (defmacro snow-increment (variable) (list 'setq variable (list '1+ variable)))
 
 (defun snow-chance (percent)
-  "True PERCENT% of the time."
-  (> percent (/ (random 100) 100.0)))
+  "True PERCENT% of the time, with some variance."
+  (let* ((range 10)
+	 (variance range)
+	 (variance-denominator (* range 100))
+	 (variance-rand (- (random variance) range))
+	 (offset (/ variance-rand variance-denominator)))
+    (> percent (/ (+ (random 100) offset) 100.0))))
 
 (defun snow-flake? (chance)
   "Function to guard snowlake creation.
