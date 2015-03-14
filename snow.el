@@ -25,7 +25,7 @@
 ;; Modeled after a bash script I found somewhere.  I'll try to find the
 ;; source as this grows.
 
-;; TODOs:
+;; TODO:
 
 ;; - [X] snow fall
 ;; - [X] debug mode
@@ -71,7 +71,7 @@
   :type 'number
   :group 'snow)
 
-(defcustom snow-crosson-index-delta 0.005
+(defcustom snow-crosson-index-delta 0.01
   "The delta applied to the current Crosson index of the snowstorm, a
 measurement of simulated-snowstorm intensity."
   :type 'number
