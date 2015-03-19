@@ -52,6 +52,9 @@
 ;; to enter a specific seed, <seed>:
 ;; C-u M-x snow RET <seed> RET
 
+;; Note: the seed is visible in the mode line of a buffer in
+;; `snow-mode'.
+
 ;;; Code:
 
 (defgroup snow nil
