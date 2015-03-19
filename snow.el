@@ -54,6 +54,10 @@
 
 ;;; Code:
 
+(defgroup snow nil
+  "Snow simulation."
+  :group 'games :group 'extras)
+
 (defcustom snow-flake "❄"
   "ASCII snowflake.  Each one is unique!"
   :type 'string
