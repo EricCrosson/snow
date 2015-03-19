@@ -153,7 +153,7 @@ snowflake."
 ;; todo: more stability but sudden surges in cindex
 (defun snow-update-cindex (crosson-index)
   "Mutate CROSSON-INDEX into a new crosson-index pseudo-randomly."
-    (abs (+ crosson-index (* (- (random 10) 7) snow-crosson-index-delta))))
+  (abs (+ crosson-index (* (- (random 10) 7) snow-crosson-index-delta))))
 
 (defun snow-increment-timeslice ()
   "Increment variable `snow-timeslice' and corresponding
@@ -184,7 +184,7 @@ Argument CROSSON-INDEX is the intensity of the current storm."
   (let ((new-snow (snow-spawn crosson-index))
 	(local-snowflakes snowflakes))
     (when (< (window-total-height) (length local-snowflakes))
-	(nbutlast local-snowflakes 1))
+      (nbutlast local-snowflakes 1))
     (cons new-snow local-snowflakes)))
 
 (defun snow-insert (snowflakes)
@@ -239,21 +239,21 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
 C-u PREFIX prompts the user for a specific seed."
   (interactive "p")
   (let ((user-seed nil))
-   (when (eq prefix 4)
-     (setq user-seed (string-to-number
-		      (read-from-minibuffer "Seed: "))))
-   (snow-setup)
-   (random (or user-seed snow-seed))
-   (catch 'persephones-return
-     (let* ((crosson-index snow-crosson-index)
-	    (snowflakes (list (snow-spawn crosson-index))))
-       (while t
-	 (let ((inhibit-quit t)
-	       (inhibit-read-only t))
-	   (snow-display snowflakes snow-time-delta)
-	   (setq crosson-index (snow-update-cindex crosson-index))
-	   (setq snowflakes (snow-fall snowflakes crosson-index))
-	   (snow-increment-timeslice)))))))
+    (when (eq prefix 4)
+      (setq user-seed (string-to-number
+		       (read-from-minibuffer "Seed: "))))
+    (snow-setup)
+    (random (or user-seed snow-seed))
+    (catch 'persephones-return
+      (let* ((crosson-index snow-crosson-index)
+	     (snowflakes (list (snow-spawn crosson-index))))
+	(while t
+	  (let ((inhibit-quit t)
+		(inhibit-read-only t))
+	    (snow-display snowflakes snow-time-delta)
+	    (setq crosson-index (snow-update-cindex crosson-index))
+	    (setq snowflakes (snow-fall snowflakes crosson-index))
+	    (snow-increment-timeslice)))))))
 
 (provide 'snow)
 
