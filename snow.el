@@ -89,6 +89,11 @@ measurement of simulated-snowstorm intensity."
   :type 'number
   :group 'snow)
 
+(defcustom snow-seed nil
+  "Random seed to use for this round of snow simulation."
+  :type 'number
+  :group 'snow)
+
 (defcustom snow-initialized nil
   "Set to true when `snow' has been run once."
   :type 'boolean
