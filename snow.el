@@ -49,6 +49,9 @@
 ;;   - or -
 ;; (snow)
 
+;; to enter a specific seed, <seed>:
+;; C-u M-x snow RET <seed> RET
+
 ;;; Code:
 
 (defcustom snow-flake "❄"
