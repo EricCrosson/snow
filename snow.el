@@ -29,7 +29,7 @@
 
 ;; - [X] snow fall
 ;; - [X] debug mode
-;; - [ ] pickable rng
+;; - [X] pickable rng
 ;; - [ ] snow collects on ground
 ;; - [ ] fastforward
 ;; - [ ] rewind
@@ -221,21 +221,27 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
   (buffer-disable-undo))
 
 ;;;###autoload
-(defun snow ()
-  "Simulate snow."
-  (interactive)
-  (snow-setup)
-  (random snow-seed)
-  (catch 'persephones-return
-    (let* ((crosson-index snow-crosson-index)
-	   (snowflakes (list (snow-spawn crosson-index))))
-      (while t
-	(let ((inhibit-quit t)
-	      (inhibit-read-only t))
-	  (snow-display snowflakes snow-time-delta)
-	  (setq crosson-index (snow-update-cindex crosson-index))
-	  (setq snowflakes (snow-fall snowflakes crosson-index))
-	  (snow-increment-timeslice))))))
+(defun snow (&optional prefix)
+  "Simulate snow.
+
+C-u PREFIX prompts the user for a specific seed."
+  (interactive "p")
+  (let ((user-seed nil))
+   (when (eq prefix 4)
+     (setq user-seed (string-to-number
+		      (read-from-minibuffer "Seed: "))))
+   (snow-setup)
+   (random (or user-seed snow-seed))
+   (catch 'persephones-return
+     (let* ((crosson-index snow-crosson-index)
+	    (snowflakes (list (snow-spawn crosson-index))))
+       (while t
+	 (let ((inhibit-quit t)
+	       (inhibit-read-only t))
+	   (snow-display snowflakes snow-time-delta)
+	   (setq crosson-index (snow-update-cindex crosson-index))
+	   (setq snowflakes (snow-fall snowflakes crosson-index))
+	   (snow-increment-timeslice)))))))
 
 (provide 'snow)
 
