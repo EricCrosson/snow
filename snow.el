@@ -40,7 +40,7 @@
 ;; - [ ] worsening conditions on the cloud
 ;; - [ ] recognized keys in snow-mode
 ;; - [ ] hide snow-mode as an interactive function
-;; - [ ] keep track of time snowed in
+;; - [X] keep track of time snowed in
 ;; - [ ] achievements unlocked
 
 ;; Usage:
@@ -56,6 +56,8 @@
 ;; `snow-mode'.
 
 ;;; Code:
+
+(require 'gamegrid)
 
 (defgroup snow nil
   "Snow simulation."
@@ -90,6 +92,12 @@ measurement of simulated-snowstorm intensity."
 (defcustom snow-crosson-index 0.0
   "Crosson Index of the current snowstorm."
   :type 'number
+  :group 'snow)
+
+(defcustom snow-score-file "~/.emacs.d/games/snow"
+  "File containing the high score (runtime) records of `snow'
+storms."
+  :type 'file
   :group 'snow)
 
 (defcustom snow-seed nil
@@ -214,6 +222,37 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
       (not (input-pending-p))
       (throw 'persephones-return nil)))
 
+(defun snow-seconds-to-human-time-string (seconds)
+  (let ((hours 0)
+	(minutes 0)
+	ret)
+    (while (<= 0 (- seconds (* 60 60)))
+      (setq seconds (- seconds (* 60 60)))
+      (setq hours (1+ hours)))
+    (while (<= 0 (- seconds 60))
+      (setq seconds (- seconds 60))
+      (setq minutes (1+ minutes)))
+    (format "%02d:%02d:%02d" hours minutes seconds)))
+
+(defun snow-random-runtime-message ()
+  (let* ((messages '("You were snowed in for"
+		    "Brrr! You braved that snowstorm for"))
+	 (rand (random (length messages))))
+    (dotimes (i rand (car messages))
+      (pop messages))))
+
+(defun snow-display-runtime (seconds)
+  "Display a message containing SECONDS, the length of the
+snowstorm the user witnessed, in human readable form."
+  (message "%s %s." (snow-random-runtime-message)
+	   (snow-seconds-to-human-time-string seconds)))
+
+(defun snow-record-score (seconds)
+  "Records SECONDS in variable `snow-score-file', if the dir
+containing it exists."
+  (when (file-exists-p (file-name-directory snow-score-file))
+    (gamegrid-add-score snow-score-file seconds)))
+
 (defun snow-setup ()
   "Setup the snow simulation environment."
   (switch-to-buffer (get-buffer-create "*Snow*") t)
@@ -247,16 +286,21 @@ C-u PREFIX prompts the user for a specific seed."
 		       (read-from-minibuffer "Seed: "))))
     (snow-setup)
     (random (or user-seed snow-seed))
-    (catch 'persephones-return
-      (let* ((crosson-index snow-crosson-index)
-	     (snowflakes (list (snow-spawn crosson-index))))
-	(while t
-	  (let ((inhibit-quit t)
-		(inhibit-read-only t))
-	    (snow-display snowflakes snow-time-delta)
-	    (setq crosson-index (snow-update-cindex crosson-index))
-	    (setq snowflakes (snow-fall snowflakes crosson-index))
-	    (snow-increment-timeslice)))))))
+    (let ((seconds
+	   (car
+	    (benchmark-run 1
+	      (catch 'persephones-return
+		(let* ((crosson-index snow-crosson-index)
+		       (snowflakes (list (snow-spawn crosson-index))))
+		  (while t
+		    (let ((inhibit-quit t)
+			  (inhibit-read-only t))
+		      (snow-display snowflakes snow-time-delta)
+		      (setq crosson-index (snow-update-cindex crosson-index))
+		      (setq snowflakes (snow-fall snowflakes crosson-index))
+		      (snow-increment-timeslice)))))))))
+	(snow-display-runtime seconds)
+	(snow-record-score seconds))))
 
 (provide 'snow)
 
