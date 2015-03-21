@@ -228,10 +228,10 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
 	ret)
     (while (<= 0 (- seconds (* 60 60)))
       (setq seconds (- seconds (* 60 60)))
-      (setq hours (1+ hours)))
+      (snow-increment hours))
     (while (<= 0 (- seconds 60))
       (setq seconds (- seconds 60))
-      (setq minutes (1+ minutes)))
+      (snow-increment minutes))
     (format "%02d:%02d:%02d" hours minutes seconds)))
 
 (defun snow-random-runtime-message ()
