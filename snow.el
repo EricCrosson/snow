@@ -224,8 +224,7 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
 
 (defun snow-seconds-to-human-time-string (seconds)
   (let ((hours 0)
-	(minutes 0)
-	ret)
+	(minutes 0))
     (while (<= 0 (- seconds (* 60 60)))
       (setq seconds (- seconds (* 60 60)))
       (snow-increment hours))
