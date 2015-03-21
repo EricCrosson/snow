@@ -59,7 +59,7 @@
 
 (defgroup snow nil
   "Snow simulation."
-  :group 'games :group 'extras)
+  :group 'games)
 
 (defcustom snow-flake "❄"
   "ASCII snowflake.  Each one is unique!"
