@@ -235,8 +235,13 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
     (format "%02d:%02d:%02d" hours minutes seconds)))
 
 (defun snow-random-runtime-message ()
-  (let* ((messages '("You were snowed in for"
-		    "Brrr! You braved that snowstorm for"))
+  ;; could arrange for loose tiering of (weighted rand and ordered
+  ;; list) of messages
+  (let* ((messages `("You were snowed in for %s."
+		    "Brrr! You braved that snowstorm for %s."
+		    "%s of snow! Are you completely submerged yet?"
+		    ,(format "After %%s of searching, the rescue party found %s!"
+			     user-login-name)))
 	 (rand (random (length messages))))
     (dotimes (i rand (car messages))
       (pop messages))))
@@ -244,7 +249,7 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
 (defun snow-display-runtime (seconds)
   "Display a message containing SECONDS, the length of the
 snowstorm the user witnessed, in human readable form."
-  (message "%s %s." (snow-random-runtime-message)
+  (message (snow-random-runtime-message)
 	   (snow-seconds-to-human-time-string seconds)))
 
 (defun snow-record-score (seconds)
@@ -299,8 +304,11 @@ C-u PREFIX prompts the user for a specific seed."
 		      (setq crosson-index (snow-update-cindex crosson-index))
 		      (setq snowflakes (snow-fall snowflakes crosson-index))
 		      (snow-increment-timeslice)))))))))
-	(snow-display-runtime seconds)
-	(snow-record-score seconds))))
+      (snow-display-runtime seconds)
+      ;; todo: run this without it hijacking the minibuffer and
+      ;; current buffer
+      ; (snow-record-score seconds)
+      )))
 
 (provide 'snow)
 
