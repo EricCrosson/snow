@@ -25,6 +25,8 @@
 ;; Modeled after a bash script I found somewhere.  I'll try to find the
 ;; source as this grows.
 
+;; Also thanks to life.el
+
 ;; TODO:
 
 ;; - [X] snow fall
@@ -223,6 +225,8 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
       (throw 'persephones-return nil)))
 
 (defun snow-seconds-to-human-time-string (seconds)
+  "Convert SECONDS into a human-readable time string of the
+following format: 02:10:01."
   (let ((hours 0)
 	(minutes 0))
     (while (<= 0 (- seconds (* 60 60)))
@@ -234,6 +238,7 @@ pending after SLEEPTIME seconds, exit `snow-mode.'"
     (format "%02d:%02d:%02d" hours minutes seconds)))
 
 (defun snow-random-runtime-message ()
+  "Evaluate to a format string containing one %s."
   ;; could arrange for loose tiering of (weighted rand and ordered
   ;; list) of messages
   (let* ((messages `("You were snowed in for %s."
