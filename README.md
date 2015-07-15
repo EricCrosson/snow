@@ -16,7 +16,7 @@ Run this package by invoking the autoloaded command `M-x snow`.
 ## Improvements 
 
 The original idea for this package came from a bash script, seen on
-[[http://stackoverflow.com/questions/8608226/simulate-bash-snow-fall-script-in-ncurses-c][StackOverflow]]. One
+[StackOverflow](http://stackoverflow.com/questions/8608226/simulate-bash-snow-fall-script-in-ncurses-c). One
 day I found it remarkably strange that I only opened a terminal to watch the
 snow fall, and decided to implement snow natively inside my favorite computing environment.
 
