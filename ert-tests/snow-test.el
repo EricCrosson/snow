@@ -1,5 +1,5 @@
 ((when (require 'undercover nil t)
-   (undercover "snow.el"))
+   (undercover "../snow.el"))
 
  require 'snow)
 
