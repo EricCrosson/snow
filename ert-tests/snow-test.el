@@ -1,4 +1,7 @@
-(require 'snow)
+((when (require 'undercover nil t)
+   (undercover "tiny.el"))
+
+ require 'snow)
 
 (ert-deftest test-snow ()
   ;; hooray -- everything loaded and nothing broke
