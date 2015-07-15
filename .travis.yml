@@ -1,4 +1,5 @@
 language: emacs-lisp
+sudo: false
 before_install:
   # PPA for stable Emacs packages
   - sudo add-apt-repository -y ppa:cassou/emacs
