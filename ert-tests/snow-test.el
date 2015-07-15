@@ -1,5 +1,5 @@
 ((when (require 'undercover nil t)
-   (undercover "tiny.el"))
+   (undercover "snow.el"))
 
  require 'snow)
 
