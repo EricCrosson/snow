@@ -1,4 +1,4 @@
-# Snow ![Build status](https://travis-ci.org/EricCrosson/snow.svg) [![GNU GPL](http://img.shields.io/:license-gpl3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
+# Snow ![Build status](https://travis-ci.org/EricCrosson/snow.svg) [![GNU GPL](http://img.shields.io/:license-gpl3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.html) [![Coverage Status](https://coveralls.io/repos/EricCrosson/snow/badge.svg?branch=master&service=github)](https://coveralls.io/github/EricCrosson/snow?branch=master)
 
 ## Installation 
 
