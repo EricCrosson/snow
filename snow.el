@@ -27,24 +27,6 @@
 
 ;; Also thanks to life.el
 
-;; TODO:
-
-;; - [X] snow fall
-;; - [X] debug mode
-;; - [X] pickable rng
-;; - [ ] snow collects on ground
-;; - [ ] fastforward
-;; - [ ] rewind
-;; - [ ] jump to time
-;; - [ ] transpose flurries
-;; - [ ] wind gusts
-;; - [ ] ground clusters
-;; - [ ] worsening conditions on the cloud
-;; - [ ] recognized keys in snow-mode
-;; - [ ] hide snow-mode as an interactive function
-;; - [X] keep track of time snowed in
-;; - [ ] achievements unlocked
-
 ;; Usage:
 
 ;; M-x snow
